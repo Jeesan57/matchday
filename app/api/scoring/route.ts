@@ -12,9 +12,14 @@ function calculatePoints(
   return 0
 }
 
+
+
 export async function POST(request: NextRequest) {
+  // Accept both manual Bearer token and Vercel cron
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronHeader = request.headers.get('x-vercel-cron')
+
+  if (!cronHeader && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
