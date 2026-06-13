@@ -12,23 +12,39 @@ export default function JoinLeagueForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Check if arriving via invite link
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search)
+    const inviteCode = params.get('join')
+    if (inviteCode && !code) setCode(inviteCode.toUpperCase())
+  }
+
   const handleJoin = async () => {
     if (!code.trim()) { setError('Enter an invite code'); return }
     setLoading(true)
     setError('')
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setError('Not signed in'); setLoading(false); return }
+    if (!user) {
+      window.location.href = `/login?redirectTo=/leagues?join=${code}`
+      return
+    }
 
-    // Find league by code
     const { data: league } = await supabase
       .from('leagues')
-      .select('id, name')
+      .select('id, name, created_by')
       .eq('code', code.trim().toUpperCase())
       .single()
 
     if (!league) {
       setError('League not found. Check the code and try again.')
+      setLoading(false)
+      return
+    }
+
+    // Prevent joining own league
+    if (league.created_by === user.id) {
+      setError("You created this league — you're already a member.")
       setLoading(false)
       return
     }
