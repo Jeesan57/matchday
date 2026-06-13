@@ -1,13 +1,58 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
+type ApiGame = {
+  id: string | number
+  finished: string
+  time_elapsed: string
+  home_team_name_en?: string | null
+  away_team_name_en?: string | null
+  home_team_id: string | number
+  away_team_id: string | number
+  home_score?: string | number | null
+  away_score?: string | number | null
+  local_date: string
+  group: string
+  type: string
+  stadium_id: string | number
+}
+
+type ApiTeam = {
+  id: string | number
+  flag: string
+}
+
+type ApiStadium = {
+  id: string | number
+  name_en: string
+  city_en: string
+}
+
+type ApiGamesResponse = {
+  games?: ApiGame[]
+}
+
+type ApiTeamsResponse = {
+  teams?: ApiTeam[]
+}
+
+type ApiStadiumsResponse = {
+  stadiums?: ApiStadium[]
+}
+
 const BASE = 'https://worldcup26.ir/get'
 
-function mapStatus(game: any): string {
+function mapStatus(game: ApiGame): string {
   if (game.finished === 'TRUE') return 'finished'
   if (game.time_elapsed === 'notstarted') return 'scheduled'
   if (game.time_elapsed === 'finished') return 'finished'
   return 'live'
+}
+
+function parseScore(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') return null
+  const score = Number(value)
+  return Number.isFinite(score) ? score : null
 }
 
 function parseDate(localDate: string): string {
@@ -36,9 +81,9 @@ export async function GET(request: NextRequest) {
   }
 
   const [gamesData, teamsData, stadiumsData] = await Promise.all([
-    gamesRes.json(),
-    teamsRes.json(),
-    stadiumsRes.json(),
+    gamesRes.json() as Promise<ApiGamesResponse>,
+    teamsRes.json() as Promise<ApiTeamsResponse>,
+    stadiumsRes.json() as Promise<ApiStadiumsResponse>,
   ])
 
   // Build lookup maps
@@ -84,8 +129,8 @@ export async function GET(request: NextRequest) {
       away_flag: flagMap[String(game.away_team_id)] ?? null,
       kickoff: parseDate(game.local_date),
       status,
-      home_score: status === 'finished' ? parseInt(game.home_score) : null,
-      away_score: status === 'finished' ? parseInt(game.away_score) : null,
+      home_score: status === 'finished' ? parseScore(game.home_score) : null,
+      away_score: status === 'finished' ? parseScore(game.away_score) : null,
       group_stage: `Group ${game.group}`,
       round: getRound(game.type),
       venue: stadiumMap[String(game.stadium_id)] ?? null,
