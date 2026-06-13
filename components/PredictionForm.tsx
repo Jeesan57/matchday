@@ -13,6 +13,15 @@ type Props = {
   awayFlag: string | null
 }
 
+function FlagImage({ src, alt }: { src: string | null; alt: string }) {
+  if (!src) return null
+  if (src.startsWith('http')) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt={alt} className="w-12 h-8 object-contain rounded" />
+  }
+  return <span className="text-3xl">{src}</span>
+}
+
 export default function PredictionForm({ matchId, homeTeam, awayTeam, homeFlag, awayFlag }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -52,7 +61,7 @@ export default function PredictionForm({ matchId, homeTeam, awayTeam, homeFlag, 
       <div className="flex items-center gap-4">
         {/* Home */}
         <div className="flex-1 flex flex-col items-center gap-2">
-          <span className="text-3xl">{homeFlag}</span>
+          <FlagImage src={homeFlag} alt={homeTeam} />
           <span className="text-sm font-medium">{homeTeam}</span>
           <Input
             type="number"
@@ -68,7 +77,7 @@ export default function PredictionForm({ matchId, homeTeam, awayTeam, homeFlag, 
 
         {/* Away */}
         <div className="flex-1 flex flex-col items-center gap-2">
-          <span className="text-3xl">{awayFlag}</span>
+          <FlagImage src={awayFlag} alt={awayTeam} />
           <span className="text-sm font-medium">{awayTeam}</span>
           <Input
             type="number"
