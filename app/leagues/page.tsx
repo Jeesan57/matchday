@@ -5,24 +5,33 @@ import { Badge } from '@/components/ui/badge'
 import CreateLeagueForm from '@/components/CreateLeagueForm'
 import JoinLeagueForm from '@/components/JoinLeagueForm'
 
+type LeagueData = {
+  id: number
+  name: string
+  code: string
+  sponsor_name: string | null
+}
+
+type MembershipData = {
+  league_id: number
+  leagues: LeagueData
+}
+
 export default async function LeaguesPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Get leagues user is a member of
   const { data: memberships } = await supabase
     .from('league_members')
     .select(`
       league_id,
-      leagues (
-        id, name, code, sponsor_name,
-        league_members ( count )
-      )
+      leagues ( id, name, code, sponsor_name )
     `)
     .eq('user_id', user.id)
 
-  const leagues = (memberships ?? []).map(m => m.leagues as any)
+  const leagues = ((memberships ?? []) as unknown as MembershipData[])
+    .map(m => m.leagues)
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -33,12 +42,11 @@ export default async function LeaguesPage() {
         </p>
       </div>
 
-      {/* My leagues */}
       {leagues.length > 0 && (
         <section>
           <h2 className="font-semibold mb-3">My Leagues</h2>
           <div className="space-y-3">
-            {leagues.map((league: any) => (
+            {leagues.map((league) => (
               <Link key={league.id} href={`/leagues/${league.id}`}>
                 <div className="border rounded-xl px-4 py-3 flex items-center justify-between hover:bg-accent/50 transition-colors">
                   <div>
@@ -49,11 +57,9 @@ export default async function LeaguesPage() {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {league.code}
-                    </Badge>
-                  </div>
+                  <Badge variant="outline" className="font-mono text-xs">
+                    {league.code}
+                  </Badge>
                 </div>
               </Link>
             ))}
@@ -61,7 +67,6 @@ export default async function LeaguesPage() {
         </section>
       )}
 
-      {/* Create + Join */}
       <div className="grid md:grid-cols-2 gap-6">
         <div className="border rounded-xl p-5 space-y-4">
           <h2 className="font-semibold">Create a League</h2>

@@ -5,13 +5,24 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
+type ProfileData = {
+  id: string
+  name: string | null
+  avatar_url: string | null
+  total_points: number
+}
+
+type MemberWithProfile = {
+  user_id: string
+  profiles: ProfileData
+}
+
 export default async function LeaguePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Get league details
   const { data: league } = await supabase
     .from('leagues')
     .select('*')
@@ -20,26 +31,21 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
 
   if (!league) notFound()
 
-  // Get members with their points
   const { data: members } = await supabase
     .from('league_members')
     .select(`
       user_id,
-      profiles (
-        id, name, avatar_url, total_points
-      )
+      profiles ( id, name, avatar_url, total_points )
     `)
     .eq('league_id', id)
-    .order('joined_at', { ascending: true })
 
-  const sorted = (members ?? [])
-    .map(m => m.profiles as any)
-    .sort((a: any, b: any) => b.total_points - a.total_points)
+  const sorted = ((members ?? []) as unknown as MemberWithProfile[])
+    .map(m => m.profiles)
+    .sort((a, b) => b.total_points - a.total_points)
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
 
-      {/* League header */}
       <div className="border rounded-xl p-6 space-y-2">
         <div className="flex items-start justify-between">
           <div>
@@ -60,11 +66,10 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
         </p>
       </div>
 
-      {/* Leaderboard */}
       <div>
         <h2 className="font-semibold mb-3">Standings — {sorted.length} members</h2>
         <div className="border rounded-xl overflow-hidden">
-          {sorted.map((profile: any, index: number) => {
+          {sorted.map((profile, index) => {
             const rank = index + 1
             const isCurrentUser = profile.id === user?.id
             const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null
@@ -82,7 +87,7 @@ export default async function LeaguePage({ params }: { params: Promise<{ id: str
                   }
                 </div>
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile.avatar_url} />
+                  <AvatarImage src={profile.avatar_url ?? undefined} />
                   <AvatarFallback>{(profile.name ?? 'U')[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
