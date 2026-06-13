@@ -8,15 +8,25 @@ type NewsItem = {
   image: string | null
 }
 
+type NewsApiResponse = {
+  results?: Array<{
+    title?: string | null
+    link?: string | null
+    pubDate?: string | null
+    source_id?: string | null
+    image_url?: string | null
+  }>
+}
+
 async function getNews(): Promise<NewsItem[]> {
   try {
     const res = await fetch(
       `https://newsdata.io/api/1/news?apikey=${process.env.NEWSDATA_API_KEY}&q=FIFA+World+Cup+2026&language=en&category=sports`,
       { next: { revalidate: 1800 } }
     )
-    const data = await res.json()
+    const data = (await res.json()) as NewsApiResponse
 
-    return (data.results ?? []).slice(0, 20).map((item: any) => ({
+    return (data.results ?? []).slice(0, 20).map(item => ({
       title: item.title ?? '',
       link: item.link ?? '',
       pubDate: item.pubDate ?? '',
@@ -62,6 +72,7 @@ export default async function NewsPage() {
               className="flex gap-3 p-3 border rounded-xl hover:bg-accent/50 transition-colors"
             >
               {item.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={item.image}
                   alt={item.title}

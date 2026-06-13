@@ -12,7 +12,7 @@ export default async function PredictPage() {
     .eq('status', 'scheduled')
     .order('kickoff', { ascending: true })
 
-  let predictions: Record<number, { pred_home: number; pred_away: number }> = {}
+  const predictions: Record<number, { pred_home: number; pred_away: number }> = {}
 
   if (user) {
     const { data } = await supabase
