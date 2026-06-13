@@ -56,10 +56,15 @@ function parseScore(value: string | number | null | undefined): number | null {
 }
 
 function parseDate(localDate: string): string {
-  // "06/11/2026 13:00" → "2026-06-11T13:00:00.000Z"
+  // "06/11/2026 13:00" → interpret as Bangladesh time (UTC+6)
   const [datePart, timePart] = localDate.split(' ')
   const [month, day, year] = datePart.split('/')
-  return `${year}-${month}-${day}T${timePart}:00.000Z`
+
+  // Create date in Bangladesh timezone
+  const bdDateTime = new Date(`${year}-${month}-${day}T${timePart}:00+06:00`)
+
+  // Return as UTC ISO string
+  return bdDateTime.toISOString()
 }
 
 export async function GET(request: NextRequest) {
