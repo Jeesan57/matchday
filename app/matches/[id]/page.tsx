@@ -134,6 +134,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             awayTeam={match.away_team}
             homeFlag={match.home_flag}
             awayFlag={match.away_flag}
+            kickoff={match.kickoff}
           />
         )}
 

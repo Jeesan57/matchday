@@ -11,6 +11,7 @@ type Props = {
   awayTeam: string
   homeFlag: string | null
   awayFlag: string | null
+  kickoff: string
 }
 
 function FlagImage({ src, alt }: { src: string | null; alt: string }) {
@@ -22,7 +23,7 @@ function FlagImage({ src, alt }: { src: string | null; alt: string }) {
   return <span className="text-3xl">{src}</span>
 }
 
-export default function PredictionForm({ matchId, homeTeam, awayTeam, homeFlag, awayFlag }: Props) {
+export default function PredictionForm({ matchId, homeTeam, awayTeam, homeFlag, awayFlag, kickoff }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const [homeScore, setHomeScore] = useState(0)
@@ -30,9 +31,25 @@ export default function PredictionForm({ matchId, homeTeam, awayTeam, homeFlag, 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const isPastKickoff = new Date() >= new Date(kickoff)
+
+  if (isPastKickoff) {
+    return (
+      <div className="text-center py-4 text-muted-foreground text-sm">
+        Predictions are closed for this match.
+      </div>
+    )
+  }
+
   const handleSubmit = async () => {
     setLoading(true)
     setError('')
+
+    if (new Date() >= new Date(kickoff)) {
+      setError('Predictions are closed for this match.')
+      setLoading(false)
+      return
+    }
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('You must be signed in.'); setLoading(false); return }
