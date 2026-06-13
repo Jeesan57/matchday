@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator,
@@ -64,69 +63,125 @@ export default function Header() {
     window.location.href = '/'
   }
 
+  const initials = (user?.user_metadata?.full_name ?? user?.email ?? 'U')[0].toUpperCase()
+
   return (
-    <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur">
-      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href="/" className="font-bold text-lg flex items-center gap-2">
-          ⚽ <span>Matchday</span>
+    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0c0f14]/90 backdrop-blur-md">
+      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+
+        {/* Logo */}
+        <Link
+          href="/"
+          className="flex items-center gap-2 shrink-0 group"
+        >
+          <span className="text-xl leading-none">⚽</span>
+          <span className="font-black text-base tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+            Matchday
+          </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                pathname === href
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
-          ))}
+        {/* Nav */}
+        <nav className="hidden md:flex items-center gap-0.5 flex-1 justify-center">
+          {navLinks.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150',
+                  active
+                    ? 'bg-emerald-500/10 text-emerald-400'
+                    : 'text-white/40 hover:text-white/80 hover:bg-white/[0.05]'
+                )}
+              >
+                <Icon
+                  className={cn(
+                    'h-3.5 w-3.5 shrink-0',
+                    active ? 'text-emerald-400' : 'text-white/30'
+                  )}
+                />
+                {label}
+              </Link>
+            )
+          })}
         </nav>
 
-        <div>
+        {/* Auth */}
+        <div className="shrink-0">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="rounded-full outline-none ring-offset-2 focus-visible:ring-2 ring-ring">
-                  <Avatar className="h-8 w-8">
+                <button className="rounded-full outline-none ring-2 ring-transparent focus-visible:ring-emerald-500/50 transition-all">
+                  <Avatar className="h-8 w-8 ring-1 ring-white/10">
                     <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback>
-                      {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
+                    <AvatarFallback className="bg-emerald-500/20 text-emerald-400 text-xs font-bold">
+                      {initials}
                     </AvatarFallback>
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <div className="px-2 py-1.5 text-sm font-medium truncate">
-                  {user.user_metadata?.full_name ?? user.email}
+              <DropdownMenuContent
+                align="end"
+                className="w-48 bg-[#141820] border-white/[0.08] text-white shadow-xl shadow-black/40"
+              >
+                <div className="px-3 py-2">
+                  <p className="text-xs font-semibold text-white/90 truncate">
+                    {user.user_metadata?.full_name ?? user.email}
+                  </p>
+                  {username && (
+                    <p className="text-[11px] text-white/35 truncate mt-0.5">@{username}</p>
+                  )}
                 </div>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-white/[0.06]" />
                 {username && (
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild className="text-white/70 hover:text-white focus:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] cursor-pointer text-xs">
                     <Link href={`/user/${username}`}>My Profile</Link>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild className="text-white/70 hover:text-white focus:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] cursor-pointer text-xs">
                   <Link href="/dashboard">Dashboard</Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer">
+                <DropdownMenuSeparator className="bg-white/[0.06]" />
+                <DropdownMenuItem
+                  onClick={signOut}
+                  className="text-red-400 hover:text-red-300 focus:text-red-300 hover:bg-red-500/[0.08] focus:bg-red-500/[0.08] cursor-pointer text-xs"
+                >
                   Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button asChild size="sm">
-              <Link href="/login">Sign in</Link>
-            </Button>
+            <Link
+              href="/login"
+              className="text-xs font-semibold px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black transition-colors tracking-wide"
+            >
+              Sign in
+            </Link>
           )}
         </div>
+      </div>
+
+      {/* Mobile nav */}
+      <div className="md:hidden flex items-center gap-0.5 overflow-x-auto px-3 pb-2 scrollbar-none">
+        {navLinks.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all shrink-0',
+                active
+                  ? 'bg-emerald-500/10 text-emerald-400'
+                  : 'text-white/35 hover:text-white/70 hover:bg-white/[0.05]'
+              )}
+            >
+              <Icon className="h-3 w-3 shrink-0" />
+              {label}
+            </Link>
+          )
+        })}
       </div>
     </header>
   )

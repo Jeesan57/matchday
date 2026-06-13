@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={GeistSans.className}>
+    <html lang="en" suppressHydrationWarning className="dark">
+      <body className={`${GeistSans.className} bg-[#0c0f14] text-white antialiased`}>
         <Header />
-        <main className="max-w-5xl mx-auto px-4 py-8">
+        <main className="max-w-2xl mx-auto px-4 py-8">
           {children}
         </main>
       </body>

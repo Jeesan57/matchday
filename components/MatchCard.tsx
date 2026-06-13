@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Badge } from '@/components/ui/badge'
 import { toBDTime } from '@/lib/format-time'
 
 type Match = {
@@ -14,23 +13,43 @@ type Match = {
   status: string
   venue: string | null
   round: string | null
+  match_minute?: number | null
+  user_prediction?: { home: number; away: number } | null
 }
 
-function FlagImage({ src, alt }: { src: string | null; alt: string }) {
-  if (!src) return <span className="w-8 h-5 bg-muted rounded text-xs flex items-center justify-center">?</span>
+function FlagImage({ src, alt, dim }: { src: string | null; alt: string; dim?: boolean }) {
+  const dimClass = dim ? 'opacity-30 grayscale' : ''
+  if (!src)
+    return (
+      <span className={`w-9 h-6 bg-white/10 rounded text-[10px] flex items-center justify-center text-white/30 font-mono shrink-0 ${dimClass}`}>
+        ?
+      </span>
+    )
   if (src.startsWith('http')) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={alt}
-        width={32}
-        height={20}
-        className="w-8 h-5 object-contain rounded-sm"
+        width={36}
+        height={24}
+        className={`w-9 h-6 object-contain rounded-sm shrink-0 transition-all duration-300 ${dimClass}`}
       />
     )
   }
-  return <span className="text-2xl leading-none">{src}</span>
+  return <span className={`text-2xl leading-none shrink-0 transition-all duration-300 ${dimClass}`}>{src}</span>
+}
+
+function ProgressBar({ minute }: { minute: number }) {
+  const pct = Math.min((minute / 90) * 100, 100)
+  return (
+    <div className="absolute inset-x-0 bottom-0 h-[2px] bg-white/[0.04] rounded-b-2xl overflow-hidden">
+      <div
+        className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  )
 }
 
 export default function MatchCard({ match }: { match: Match }) {
@@ -38,63 +57,135 @@ export default function MatchCard({ match }: { match: Match }) {
   const isFinished = match.status === 'finished'
   const showScore = isLive || isFinished
 
+  // Winner detection for dimming
+  const homeScore = match.home_score ?? 0
+  const awayScore = match.away_score ?? 0
+  const homeLost = isFinished && homeScore < awayScore
+  const awayLost = isFinished && awayScore < homeScore
+
   return (
-    <Link href={`/matches/${match.id}`}>
-      <div className="border rounded-xl p-4 hover:bg-accent/50 transition-colors cursor-pointer">
+    <Link href={`/matches/${match.id}`} className="block group">
+      <div
+        className={[
+          'relative rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer',
+          'bg-white/[0.03] border border-white/[0.07]',
+          'hover:bg-white/[0.06] hover:border-white/[0.12] hover:-translate-y-px',
+          isLive
+            ? 'ring-1 ring-emerald-500/30 shadow-[0_0_32px_-6px_rgba(16,185,129,0.2)]'
+            : 'hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]',
+        ].join(' ')}
+      >
+        {/* Live top shimmer */}
+        {isLive && (
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent" />
+        )}
 
-        {/* Top row: round + status */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-muted-foreground">
-            {match.round ?? 'Group Stage'}
-          </span>
-          {isLive && (
-            <Badge variant="destructive" className="text-xs gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-white live-dot inline-block" />
-              LIVE
-            </Badge>
-          )}
-          {isFinished && (
-            <Badge variant="secondary" className="text-xs">FT</Badge>
-          )}
-          {match.status === 'scheduled' && (
-            <span className="text-xs text-muted-foreground">
-              {toBDTime(match.kickoff)}
+        <div className="px-5 pt-4 pb-5">
+          {/* Top row: round + status */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-white/25">
+              {match.round ?? 'Group Stage'}
             </span>
-          )}
-        </div>
 
-        {/* Teams + score */}
-        <div className="flex items-center justify-between gap-4">
-
-          {/* Home team */}
-          <div className="flex items-center gap-2 flex-1">
-            <FlagImage src={match.home_flag} alt={match.home_team} />
-            <span className="font-medium text-sm">{match.home_team}</span>
-          </div>
-
-          {/* Score or VS */}
-          <div className="text-center min-w-[60px]">
-            {showScore ? (
-              <span className="text-xl font-bold tabular-nums">
-                {match.home_score ?? 0} – {match.away_score ?? 0}
+            {isLive && (
+              <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.15em] uppercase text-emerald-400">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                {match.match_minute ? `${match.match_minute}'` : 'Live'}
               </span>
-            ) : (
-              <span className="text-sm text-muted-foreground font-medium">vs</span>
+            )}
+
+            {isFinished && (
+              <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-white/30">
+                Full Time
+              </span>
+            )}
+
+            {match.status === 'scheduled' && (
+              <span className="text-[11px] font-semibold text-white/35 tabular-nums">
+                {toBDTime(match.kickoff)}
+              </span>
             )}
           </div>
 
-          {/* Away team */}
-          <div className="flex items-center gap-2 flex-1 justify-end">
-            <span className="font-medium text-sm">{match.away_team}</span>
-            <FlagImage src={match.away_flag} alt={match.away_team} />
+          {/* Teams + score row */}
+          <div className="flex items-center gap-2">
+            {/* Home team */}
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <FlagImage src={match.home_flag} alt={match.home_team} dim={homeLost} />
+              <span
+                className={[
+                  'font-semibold text-sm leading-tight truncate transition-all duration-300',
+                  homeLost ? 'text-white/30' : 'text-white/90',
+                ].join(' ')}
+              >
+                {match.home_team}
+              </span>
+            </div>
+
+            {/* Score / VS */}
+            <div className="flex-shrink-0 flex flex-col items-center gap-1 min-w-[80px]">
+              {showScore ? (
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className={[
+                      'text-[22px] font-black tabular-nums leading-none transition-all duration-300',
+                      isLive ? 'text-emerald-400' : homeLost ? 'text-white/35' : 'text-white',
+                    ].join(' ')}
+                  >
+                    {homeScore}
+                  </span>
+                  <span className="text-white/15 text-base font-light select-none">–</span>
+                  <span
+                    className={[
+                      'text-[22px] font-black tabular-nums leading-none transition-all duration-300',
+                      isLive ? 'text-emerald-400' : awayLost ? 'text-white/35' : 'text-white',
+                    ].join(' ')}
+                  >
+                    {awayScore}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/15 select-none">
+                  vs
+                </span>
+              )}
+
+              {/* User prediction chip */}
+              {match.user_prediction && (
+                <span className="text-[10px] font-semibold text-amber-400/80 bg-amber-400/[0.08] px-2 py-0.5 rounded-full tracking-wide">
+                  You: {match.user_prediction.home}–{match.user_prediction.away}
+                </span>
+              )}
+            </div>
+
+            {/* Away team */}
+            <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+              <span
+                className={[
+                  'font-semibold text-sm leading-tight truncate text-right transition-all duration-300',
+                  awayLost ? 'text-white/30' : 'text-white/90',
+                ].join(' ')}
+              >
+                {match.away_team}
+              </span>
+              <FlagImage src={match.away_flag} alt={match.away_team} dim={awayLost} />
+            </div>
           </div>
+
+          {/* Venue */}
+          {match.venue && (
+            <p className="text-[10px] text-white/20 text-center mt-3.5 tracking-wide truncate">
+              {match.venue}
+            </p>
+          )}
         </div>
 
-        {/* Venue */}
-        {match.venue && (
-          <p className="text-xs text-muted-foreground text-center mt-3">
-            📍 {match.venue}
-          </p>
+        {/* Live progress bar */}
+        {isLive && match.match_minute && (
+          <ProgressBar minute={match.match_minute} />
         )}
       </div>
     </Link>
