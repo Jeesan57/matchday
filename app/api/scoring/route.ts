@@ -73,3 +73,8 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ message: `Scored ${totalScored} predictions` })
 }
+
+// Allow Vercel cron to call this as GET
+export async function GET(request: NextRequest) {
+  return POST(request)
+}
