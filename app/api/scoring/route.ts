@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
 function calculatePoints(
@@ -12,10 +12,25 @@ function calculatePoints(
   return 0
 }
 
+async function updateStreak(supabase: SupabaseClient, userId: string, points: number) {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('current_streak, best_streak')
+    .eq('id', userId)
+    .single()
 
+  if (!profile) return
+
+  const newStreak = points > 0 ? (profile.current_streak ?? 0) + 1 : 0
+  const newBest = Math.max(profile.best_streak ?? 0, newStreak)
+
+  await supabase
+    .from('profiles')
+    .update({ current_streak: newStreak, best_streak: newBest })
+    .eq('id', userId)
+}
 
 export async function POST(request: NextRequest) {
-  // Accept both manual Bearer token and Vercel cron
   const authHeader = request.headers.get('authorization')
   const cronHeader = request.headers.get('x-vercel-cron')
 
@@ -23,8 +38,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Use service role key — bypasses RLS
-  const supabase = createClient(
+  const supabase: SupabaseClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
@@ -67,6 +81,8 @@ export async function POST(request: NextRequest) {
         amount: points,
       })
 
+      await updateStreak(supabase, pred.user_id, points)
+
       totalScored++
     }
   }
@@ -74,7 +90,6 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ message: `Scored ${totalScored} predictions` })
 }
 
-// Allow Vercel cron to call this as GET
 export async function GET(request: NextRequest) {
   return POST(request)
 }

@@ -36,16 +36,14 @@ export default async function UserProfilePage({
 
   const { data: { user: currentUser } } = await supabase.auth.getUser()
 
-  // Get profile by username
   const { data: profile } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, name, avatar_url, username, total_points, current_streak, best_streak')
     .eq('username', username)
     .single()
 
   if (!profile) notFound()
 
-  // Get their predictions with match data
   const { data: predictions } = await supabase
     .from('predictions')
     .select(`
@@ -67,14 +65,12 @@ export default async function UserProfilePage({
     ? Math.round(((exact.length + correct.length) / scored.length) * 100)
     : 0
 
-  // Get global rank
   const { data: allProfiles } = await supabase
     .from('profiles')
     .select('id, total_points')
     .order('total_points', { ascending: false })
 
   const rank = (allProfiles ?? []).findIndex(p => p.id === profile.id) + 1
-
   const isOwnProfile = currentUser?.id === profile.id
 
   return (
@@ -97,9 +93,9 @@ export default async function UserProfilePage({
               )}
             </div>
             <p className="text-sm text-muted-foreground">@{profile.username}</p>
-            {profile.favorite_team && (
-              <p className="text-sm text-muted-foreground mt-1">
-                ❤️ {profile.favorite_team}
+            {(profile.current_streak ?? 0) >= 2 && (
+              <p className="text-sm text-orange-500 mt-1">
+                🔥 {profile.current_streak} match streak
               </p>
             )}
           </div>
@@ -107,16 +103,14 @@ export default async function UserProfilePage({
             <p className="text-3xl font-bold">{profile.total_points}</p>
             <p className="text-xs text-muted-foreground">total points</p>
             {rank > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                #{rank} globally
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">#{rank} globally</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
         <div className="border rounded-xl p-3 text-center">
           <p className="text-2xl font-bold">{typed.length}</p>
           <p className="text-xs text-muted-foreground mt-1">Predictions</p>
@@ -132,6 +126,14 @@ export default async function UserProfilePage({
         <div className="border rounded-xl p-3 text-center">
           <p className="text-2xl font-bold">{accuracy}%</p>
           <p className="text-xs text-muted-foreground mt-1">Accuracy</p>
+        </div>
+        <div className="border rounded-xl p-3 text-center">
+          <p className="text-2xl font-bold text-orange-500">{profile.current_streak ?? 0}</p>
+          <p className="text-xs text-muted-foreground mt-1">Streak 🔥</p>
+        </div>
+        <div className="border rounded-xl p-3 text-center">
+          <p className="text-2xl font-bold">{profile.best_streak ?? 0}</p>
+          <p className="text-xs text-muted-foreground mt-1">Best 🏆</p>
         </div>
       </div>
 
@@ -190,7 +192,6 @@ export default async function UserProfilePage({
                     {/* Match */}
                     <div className="flex items-center gap-1.5 text-sm flex-1 min-w-0">
                       {m.home_flag && (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={m.home_flag} alt={m.home_team} className="w-6 h-4 object-cover rounded-sm shrink-0" />
                       )}
                       <span className="font-medium truncate hidden sm:block">{m.home_team}</span>
@@ -203,7 +204,6 @@ export default async function UserProfilePage({
                       )}
                       <span className="font-medium truncate hidden sm:block">{m.away_team}</span>
                       {m.away_flag && (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={m.away_flag} alt={m.away_team} className="w-6 h-4 object-cover rounded-sm shrink-0" />
                       )}
                     </div>

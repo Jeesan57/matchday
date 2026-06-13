@@ -12,7 +12,7 @@ export default async function LeaderboardPage() {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, name, avatar_url, total_points, username')
+    .select('id, name, avatar_url, total_points, username, current_streak, best_streak')
     .order('total_points', { ascending: false })
     .limit(50)
 
@@ -45,7 +45,7 @@ export default async function LeaderboardPage() {
                 ${isCurrentUser ? 'bg-primary/5 border-l-2 border-l-primary' : 'hover:bg-accent/50'}`}
             >
               {/* Rank */}
-              <div className="w-8 text-center">
+              <div className="w-8 text-center shrink-0">
                 {medal ? (
                   <span className="text-xl">{medal}</span>
                 ) : (
@@ -54,19 +54,19 @@ export default async function LeaderboardPage() {
               </div>
 
               {/* Avatar */}
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 shrink-0">
                 <AvatarImage src={profile.avatar_url ?? undefined} />
                 <AvatarFallback>
                   {(profile.name ?? 'U')[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
 
-              {/* Name */}
+              {/* Name + streak */}
               <div className="flex-1 min-w-0">
                 {profile.username ? (
                   <Link
                     href={`/user/${profile.username}`}
-                    className="font-medium text-sm truncate hover:underline underline-offset-4"
+                    className="font-medium text-sm hover:underline underline-offset-4 block truncate"
                   >
                     {profile.name ?? 'Anonymous'}
                     {isCurrentUser && (
@@ -81,10 +81,15 @@ export default async function LeaderboardPage() {
                     )}
                   </p>
                 )}
+                {(profile.current_streak ?? 0) >= 2 && (
+                  <p className="text-xs text-orange-500">
+                    🔥 {profile.current_streak} streak
+                  </p>
+                )}
               </div>
 
               {/* Points */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <Badge variant={isCurrentUser ? 'default' : 'secondary'}>
                   {profile.total_points} pts
                 </Badge>
