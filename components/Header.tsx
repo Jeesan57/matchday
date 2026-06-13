@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Calendar, Trophy, Users, BarChart3, Shirt, Target } from 'lucide-react'
+import { Calendar, Trophy, Users, BarChart3, Shirt, Target, Newspaper } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navLinks = [
@@ -21,6 +21,7 @@ const navLinks = [
   { href: '/teams', label: 'Teams', icon: Shirt },
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { href: '/leagues', label: 'Leagues', icon: Users },
+  { href: '/news', label: 'News', icon: Newspaper },
 ]
 
 export default function Header() {
