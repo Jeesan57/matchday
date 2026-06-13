@@ -63,7 +63,7 @@ export default async function HomePage() {
 
       {/* Today's matches */}
       <section>
-        <h2 className="font-semibold mb-3">Today's Matches</h2>
+        <h2 className="font-semibold mb-3">Today&apos;s Matches</h2>
         {allToday.length > 0 ? (
           <div className="grid gap-3">
             {allToday.map(match => (

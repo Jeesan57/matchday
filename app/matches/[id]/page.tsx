@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import PredictionForm from '@/components/PredictionForm'
