@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { format } from 'date-fns'
+import { toBDTime } from '@/lib/format-time'
 
 type Match = {
   id: number
@@ -58,7 +58,7 @@ export default function MatchCard({ match }: { match: Match }) {
           )}
           {match.status === 'scheduled' && (
             <span className="text-xs text-muted-foreground">
-              {format(new Date(match.kickoff), 'HH:mm')}
+              {toBDTime(match.kickoff)}
             </span>
           )}
         </div>

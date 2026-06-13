@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { format } from 'date-fns'
+import { toBDDate, toBDTime } from '@/lib/format-time'
 import { Badge } from '@/components/ui/badge'
 import PredictionForm from '@/components/PredictionForm'
 import { notFound } from 'next/navigation'
@@ -62,7 +62,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           {isFinished && <Badge variant="secondary">Full Time</Badge>}
           {match.status === 'scheduled' && (
             <span className="text-sm text-muted-foreground">
-              {format(new Date(match.kickoff), 'EEE d MMM · HH:mm')}
+              {toBDDate(match.kickoff)} · {toBDTime(match.kickoff)}
             </span>
           )}
         </div>

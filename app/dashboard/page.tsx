@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { format } from 'date-fns'
+import { toBDDate, toBDTime } from '@/lib/format-time'
 import Link from 'next/link'
 
 type MatchData = {
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
                       {p.pred_home} – {p.pred_away}
                     </span>
                     <Badge variant="outline" className="text-xs">
-                      {p.matches.status === 'live' ? '🔴 Live' : format(new Date(p.matches.kickoff), 'd MMM HH:mm')}
+                      {p.matches.status === 'live' ? '🔴 Live' : `${toBDDate(p.matches.kickoff)} ${toBDTime(p.matches.kickoff)}`}
                     </Badge>
                   </div>
                 </div>

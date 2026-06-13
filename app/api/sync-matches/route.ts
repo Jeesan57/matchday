@@ -55,16 +55,23 @@ function parseScore(value: string | number | null | undefined): number | null {
   return Number.isFinite(score) ? score : null
 }
 
-function parseDate(localDate: string): string {
-  // "06/11/2026 13:00" → interpret as Bangladesh time (UTC+6)
+function parseDate(localDate: string, stadiumId: string): string {
   const [datePart, timePart] = localDate.split(' ')
   const [month, day, year] = datePart.split('/')
 
-  // Create date in Bangladesh timezone
-  const bdDateTime = new Date(`${year}-${month}-${day}T${timePart}:00+06:00`)
+  const offsetMap: Record<string, number> = {
+    '1': -5, '2': -5, '3': -5,   // Mexico (CDT)
+    '4': -5, '5': -5, '6': -5,   // Central (CDT)
+    '7': -4, '8': -4, '9': -4,   // Eastern (EDT)
+    '10': -4, '11': -4, '12': -4, // Eastern (EDT)
+    '13': -7, '14': -7, '15': -7, '16': -7, // Pacific (PDT)
+  }
 
-  // Return as UTC ISO string
-  return bdDateTime.toISOString()
+  const offsetHours = offsetMap[stadiumId] ?? -5
+
+  const utcDate = new Date(`${year}-${month}-${day}T${timePart}:00Z`)
+  const utcMs = utcDate.getTime() - offsetHours * 60 * 60 * 1000
+  return new Date(utcMs).toISOString()
 }
 
 export async function GET(request: NextRequest) {
@@ -125,14 +132,13 @@ export async function GET(request: NextRequest) {
     }
 
     const status = mapStatus(game)
-
     const matchData = {
       external_id: `wc26_${game.id}`,
       home_team: homeName,
       away_team: awayName,
       home_flag: flagMap[String(game.home_team_id)] ?? null,
       away_flag: flagMap[String(game.away_team_id)] ?? null,
-      kickoff: parseDate(game.local_date),
+      kickoff: parseDate(game.local_date, String(game.stadium_id)),
       status,
       home_score: status === 'finished' ? parseScore(game.home_score) : null,
       away_score: status === 'finished' ? parseScore(game.away_score) : null,
@@ -140,6 +146,9 @@ export async function GET(request: NextRequest) {
       round: getRound(game.type),
       venue: stadiumMap[String(game.stadium_id)] ?? null,
     }
+
+    // ADD THIS LINE RIGHT HERE
+    if (String(game.id) === '8') console.log('Qatar vs Switzerland kickoff UTC:', matchData.kickoff)
 
     const { error } = await supabase
       .from('matches')
@@ -154,6 +163,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({ synced, skipped })
 }
+
 
 function getRound(type: string): string {
   const map: Record<string, string> = {
