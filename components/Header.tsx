@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
@@ -10,9 +11,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Calendar, Trophy, Users, BarChart3 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+const navLinks = [
+  { href: '/', label: 'Fixtures', icon: Calendar },
+  { href: '/standings', label: 'Standings', icon: BarChart3 },
+  { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+  { href: '/leagues', label: 'Leagues', icon: Users },
+]
 
 export default function Header() {
   const supabase = createClient()
+  const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
@@ -21,6 +32,7 @@ export default function Header() {
       setUser(session?.user ?? null)
     })
     return () => subscription.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const signOut = async () => {
@@ -35,10 +47,22 @@ export default function Header() {
           ⚽ <span>Matchday</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-foreground transition-colors">Fixtures</Link>
-          <Link href="/leaderboard" className="hover:text-foreground transition-colors">Leaderboard</Link>
-          <Link href="/leagues" className="hover:text-foreground transition-colors">Leagues</Link>
+        <nav className="hidden md:flex items-center gap-1">
+          {navLinks.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                pathname === href
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </Link>
+          ))}
         </nav>
 
         <div>
