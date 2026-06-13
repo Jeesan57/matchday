@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
 
 export const revalidate = 60
 
@@ -11,7 +12,7 @@ export default async function LeaderboardPage() {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, name, avatar_url, total_points')
+    .select('id, name, avatar_url, total_points, username')
     .order('total_points', { ascending: false })
     .limit(50)
 
@@ -62,12 +63,24 @@ export default async function LeaderboardPage() {
 
               {/* Name */}
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">
-                  {profile.name ?? 'Anonymous'}
-                  {isCurrentUser && (
-                    <span className="ml-2 text-xs text-primary font-normal">(you)</span>
-                  )}
-                </p>
+                {profile.username ? (
+                  <Link
+                    href={`/user/${profile.username}`}
+                    className="font-medium text-sm truncate hover:underline underline-offset-4"
+                  >
+                    {profile.name ?? 'Anonymous'}
+                    {isCurrentUser && (
+                      <span className="ml-2 text-xs text-primary font-normal">(you)</span>
+                    )}
+                  </Link>
+                ) : (
+                  <p className="font-medium text-sm truncate">
+                    {profile.name ?? 'Anonymous'}
+                    {isCurrentUser && (
+                      <span className="ml-2 text-xs text-primary font-normal">(you)</span>
+                    )}
+                  </p>
+                )}
               </div>
 
               {/* Points */}

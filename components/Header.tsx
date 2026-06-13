@@ -28,11 +28,32 @@ export default function Header() {
   const supabase = createClient()
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
+  const [username, setUsername] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user)
+      if (data.user) {
+        supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', data.user.id)
+          .single()
+          .then(({ data: profile }) => setUsername(profile?.username ?? null))
+      }
+    })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => setUsername(profile?.username ?? null))
+      } else {
+        setUsername(null)
+      }
     })
     return () => subscription.unsubscribe()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,11 +107,13 @@ export default function Header() {
                   {user.user_metadata?.full_name ?? user.email}
                 </div>
                 <DropdownMenuSeparator />
+                {username && (
+                  <DropdownMenuItem asChild>
+                    <Link href={`/user/${username}`}>My Profile</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard">My Predictions</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/leagues">My Leagues</Link>
+                  <Link href="/dashboard">Dashboard</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer">
