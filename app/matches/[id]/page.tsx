@@ -2,16 +2,20 @@ import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import PredictionForm from '@/components/PredictionForm'
+import { notFound } from 'next/navigation'
 
-export default async function MatchPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default async function MatchPage({ params }: { params: { id: string } }) {
+  const { id } = params
   const supabase = await createClient()
+
 
   const { data: match } = await supabase
     .from('matches')
     .select('*')
     .eq('id', id)
     .single()
+
+  if (!match) notFound()
 
   const { data: { user } } = await supabase.auth.getUser()
 
