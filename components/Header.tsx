@@ -11,12 +11,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Calendar, Trophy, Users, BarChart3 } from 'lucide-react'
+import { Calendar, Trophy, Users, BarChart3, Shirt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navLinks = [
   { href: '/', label: 'Fixtures', icon: Calendar },
   { href: '/standings', label: 'Standings', icon: BarChart3 },
+  { href: '/teams', label: 'Teams', icon: Shirt },
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { href: '/leagues', label: 'Leagues', icon: Users },
 ]
