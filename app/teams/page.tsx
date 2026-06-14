@@ -16,8 +16,8 @@ export default async function TeamsPage() {
   })
   const data: TeamsResponse = await res.json()
 
-  const teams = (data.teams ?? []).sort((a, b) =>
-    a.groups.localeCompare(b.groups) || a.name_en.localeCompare(b.name_en)
+  const teams = (data.teams ?? []).sort(
+    (a, b) => a.groups.localeCompare(b.groups) || a.name_en.localeCompare(b.name_en)
   )
 
   const grouped: Record<string, TeamInfo[]> = {}
@@ -29,57 +29,74 @@ export default async function TeamsPage() {
   const sortedGroups = Object.keys(grouped).sort()
 
   return (
-    <div className="space-y-10 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Teams</h1>
-          <p className="text-muted-foreground mt-1">
-            {teams.length} nations · World Cup 2026
-          </p>
+    <div className="pb-16">
+
+      {/* Hero */}
+      <div className="pt-2 pb-7 border-b border-white/[0.05] mb-10">
+        <p className="text-[11px] font-bold tracking-[0.22em] uppercase text-emerald-500/70 mb-2">
+          FIFA World Cup 2026
+        </p>
+        <div className="flex items-end justify-between gap-4">
+          <h1 className="text-3xl font-black tracking-tight leading-none">Teams</h1>
+          <span className="text-sm font-semibold text-white/25 pb-0.5 tabular-nums">
+            {teams.length} nations
+          </span>
         </div>
-        <span className="text-4xl">🏆</span>
+        <p className="text-sm text-white/30 mt-2">
+          {sortedGroups.length} groups · Group Stage
+        </p>
       </div>
 
       {/* Groups */}
-      <div className="space-y-8">
+      <div className="space-y-12">
         {sortedGroups.map(group => (
           <div key={group}>
+
             {/* Group label */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-6 w-1 rounded-full bg-primary" />
-              <h2 className="font-bold text-lg">Group {group}</h2>
-              <div className="flex-1 h-px bg-border" />
+            <div className="flex items-center gap-3 mb-5">
+              <h2 className="text-[11px] font-black tracking-[0.18em] uppercase text-white/40">
+                Group {group}
+              </h2>
+              <div className="flex-1 h-px bg-white/[0.06]" />
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-white/20">
+                {grouped[group].length} teams
+              </span>
             </div>
 
             {/* Team cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {grouped[group].map(team => (
                 <div
                   key={team.id}
-                  className="group border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-md transition-all duration-200 bg-card"
+                  className={[
+                    'group relative rounded-2xl overflow-hidden cursor-default',
+                    'border border-white/[0.07] bg-white/[0.03]',
+                    'hover:border-white/[0.14] hover:-translate-y-0.5',
+                    'transition-all duration-200',
+                  ].join(' ')}
                 >
                   {/* Flag banner */}
-                  <div className="relative h-24 overflow-hidden bg-muted/30">
+                  <div className="relative h-[72px] overflow-hidden bg-white/[0.04]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={team.flag}
                       alt={team.name_en}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      style={{ objectPosition: 'center' }}
+                      className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-300"
                     />
-                    {/* Overlay gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                    {/* FIFA code badge */}
-                    <span className="absolute top-2 right-2 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded backdrop-blur-sm">
+                    {/* Bottom fade so text below reads cleanly */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0f14]/80 via-transparent to-transparent" />
+
+                    {/* FIFA code — bottom left over the fade */}
+                    <span className="absolute bottom-2 left-3 text-[10px] font-black tracking-widest text-white/60">
                       {team.fifa_code}
                     </span>
                   </div>
 
-                  {/* Team info */}
+                  {/* Team name */}
                   <div className="px-3 py-2.5">
-                    <p className="font-semibold text-sm leading-tight">{team.name_en}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Group {team.groups}</p>
+                    <p className="font-semibold text-[12px] text-white/85 leading-tight truncate">
+                      {team.name_en}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -87,6 +104,7 @@ export default async function TeamsPage() {
           </div>
         ))}
       </div>
+
     </div>
   )
 }
