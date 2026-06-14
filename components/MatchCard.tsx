@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { toBDTime } from '@/lib/format-time'
+import CountdownBadge from '@/components/Countdownbadge'
 
 type Match = {
   id: number
@@ -57,7 +58,6 @@ export default function MatchCard({ match }: { match: Match }) {
   const isFinished = match.status === 'finished'
   const showScore = isLive || isFinished
 
-  // Winner detection for dimming
   const homeScore = match.home_score ?? 0
   const awayScore = match.away_score ?? 0
   const homeLost = isFinished && homeScore < awayScore
@@ -81,6 +81,7 @@ export default function MatchCard({ match }: { match: Match }) {
         )}
 
         <div className="px-5 pt-4 pb-5">
+
           {/* Top row: round + status */}
           <div className="flex items-center justify-between mb-4">
             <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-white/25">
@@ -112,15 +113,14 @@ export default function MatchCard({ match }: { match: Match }) {
 
           {/* Teams + score row */}
           <div className="flex items-center gap-2">
+
             {/* Home team */}
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
               <FlagImage src={match.home_flag} alt={match.home_team} dim={homeLost} />
-              <span
-                className={[
-                  'font-semibold text-sm leading-tight truncate transition-all duration-300',
-                  homeLost ? 'text-white/30' : 'text-white/90',
-                ].join(' ')}
-              >
+              <span className={[
+                'font-semibold text-sm leading-tight truncate transition-all duration-300',
+                homeLost ? 'text-white/30' : 'text-white/90',
+              ].join(' ')}>
                 {match.home_team}
               </span>
             </div>
@@ -129,21 +129,17 @@ export default function MatchCard({ match }: { match: Match }) {
             <div className="flex-shrink-0 flex flex-col items-center gap-1 min-w-[80px]">
               {showScore ? (
                 <div className="flex items-center gap-2.5">
-                  <span
-                    className={[
-                      'text-[22px] font-black tabular-nums leading-none transition-all duration-300',
-                      isLive ? 'text-emerald-400' : homeLost ? 'text-white/35' : 'text-white',
-                    ].join(' ')}
-                  >
+                  <span className={[
+                    'text-[22px] font-black tabular-nums leading-none transition-all duration-300',
+                    isLive ? 'text-emerald-400' : homeLost ? 'text-white/35' : 'text-white',
+                  ].join(' ')}>
                     {homeScore}
                   </span>
                   <span className="text-white/15 text-base font-light select-none">–</span>
-                  <span
-                    className={[
-                      'text-[22px] font-black tabular-nums leading-none transition-all duration-300',
-                      isLive ? 'text-emerald-400' : awayLost ? 'text-white/35' : 'text-white',
-                    ].join(' ')}
-                  >
+                  <span className={[
+                    'text-[22px] font-black tabular-nums leading-none transition-all duration-300',
+                    isLive ? 'text-emerald-400' : awayLost ? 'text-white/35' : 'text-white',
+                  ].join(' ')}>
                     {awayScore}
                   </span>
                 </div>
@@ -153,7 +149,6 @@ export default function MatchCard({ match }: { match: Match }) {
                 </span>
               )}
 
-              {/* User prediction chip */}
               {match.user_prediction && (
                 <span className="text-[10px] font-semibold text-amber-400/80 bg-amber-400/[0.08] px-2 py-0.5 rounded-full tracking-wide">
                   You: {match.user_prediction.home}–{match.user_prediction.away}
@@ -163,24 +158,34 @@ export default function MatchCard({ match }: { match: Match }) {
 
             {/* Away team */}
             <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
-              <span
-                className={[
-                  'font-semibold text-sm leading-tight truncate text-right transition-all duration-300',
-                  awayLost ? 'text-white/30' : 'text-white/90',
-                ].join(' ')}
-              >
+              <span className={[
+                'font-semibold text-sm leading-tight truncate text-right transition-all duration-300',
+                awayLost ? 'text-white/30' : 'text-white/90',
+              ].join(' ')}>
                 {match.away_team}
               </span>
               <FlagImage src={match.away_flag} alt={match.away_team} dim={awayLost} />
             </div>
           </div>
 
-          {/* Venue */}
-          {match.venue && (
-            <p className="text-[10px] text-white/20 text-center mt-3.5 tracking-wide truncate">
-              {match.venue}
-            </p>
-          )}
+          {/* Bottom row: venue left, countdown right */}
+          <div className="grid grid-cols-3 items-center mt-3.5">
+            <div />
+
+            {match.venue ? (
+              <p className="text-[10px] text-white/20 tracking-wide truncate text-center">
+                {match.venue}
+              </p>
+            ) : (
+              <div />
+            )}
+
+            <div className="justify-self-end">
+              {match.status === 'scheduled' && (
+                <CountdownBadge kickoff={match.kickoff} />
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Live progress bar */}
