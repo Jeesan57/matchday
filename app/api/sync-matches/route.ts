@@ -51,11 +51,10 @@ function parseDate(localDate: string, stadiumId: string): string {
   const [datePart, timePart] = localDate.split(' ')
   const [month, day, year] = datePart.split('/')
 
-  // Local time offset from UTC for each stadium
   const offsetMap: Record<string, number> = {
-    '1': -5, // Estadio Azteca, Mexico City (CDT)
-    '2': -5, // Estadio Akron, Guadalajara (CDT)
-    '3': -5, // Estadio BBVA, Monterrey (CDT)
+    '1': -6, // Estadio Azteca, Mexico City (CST, no DST)
+    '2': -6, // Estadio Akron, Guadalajara (CST, no DST)
+    '3': -6, // Estadio BBVA, Monterrey (CST, no DST)
     '4': -5, // AT&T Stadium, Dallas (CDT)
     '5': -5, // NRG Stadium, Houston (CDT)
     '6': -5, // Arrowhead, Kansas City (CDT)
@@ -72,10 +71,12 @@ function parseDate(localDate: string, stadiumId: string): string {
   }
 
   const offsetHours = offsetMap[stadiumId] ?? -5
+
   const utcDate = new Date(`${year}-${month}-${day}T${timePart}:00Z`)
   const utcMs = utcDate.getTime() - offsetHours * 60 * 60 * 1000
   return new Date(utcMs).toISOString()
 }
+
 
 function getRound(type: string): string {
   const map: Record<string, string> = {

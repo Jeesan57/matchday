@@ -19,8 +19,8 @@ type MembershipData = {
 export default async function LeaguesPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
+  if (!user) redirect('/login?next=/leagues')
+    
   const { data: memberships } = await supabase
     .from('league_members')
     .select(`league_id, leagues ( id, name, code, sponsor_name )`)
