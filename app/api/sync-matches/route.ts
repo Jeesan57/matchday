@@ -37,7 +37,7 @@ const BASE = 'https://worldcup26.ir/get'
 function mapStatus(game: ApiGame): string {
   if (game.finished === 'TRUE') return 'finished'
   if (game.time_elapsed === 'notstarted') return 'scheduled'
-  if (game.time_elapsed === 'finished') return 'finished'
+  if (game.time_elapsed?.toLowerCase() === 'finished') return 'finished'
   return 'live'
 }
 
@@ -157,8 +157,8 @@ export async function GET(request: NextRequest) {
       away_flag: flagMap[String(game.away_team_id)] ?? null,
       kickoff: parseDate(game.local_date, stadiumId),
       status,
-      home_score: status === 'finished' ? parseScore(game.home_score) : null,
-      away_score: status === 'finished' ? parseScore(game.away_score) : null,
+      home_score: parseScore(game.home_score),
+      away_score: parseScore(game.away_score),
       group_stage: `Group ${game.group}`,
       round: getRound(game.type),
       venue: stadiumMap[stadiumId] ?? null,
