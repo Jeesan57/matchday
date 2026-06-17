@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { toBDDate, toBDTime } from '@/lib/format-time'
+import { toBDTime } from '@/lib/format-time'
 import Link from 'next/link'
 
 type MatchData = {

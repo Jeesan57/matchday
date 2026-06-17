@@ -11,15 +11,21 @@ type TeamInfo = {
 type TeamsResponse = { teams?: TeamInfo[] }
 
 export default async function TeamsPage() {
-  const res = await fetch('https://worldcup26.ir/get/teams', {
-    next: { revalidate: 3600 },
-  })
-  const data: TeamsResponse = await res.json()
+  let data: TeamsResponse = {}
 
-  const teams = (data.teams ?? []).sort(
-    (a, b) => a.groups.localeCompare(b.groups) || a.name_en.localeCompare(b.name_en)
+  try {
+    const res = await fetch('https://worldcup26.ir/get/teams', {
+      next: { revalidate: 3600 },
+    })
+    data = await res.json()
+  } catch {
+    // API unreachable during build
+  }
+
+  const teams = (data.teams ?? []).sort((a, b) =>
+    a.groups.localeCompare(b.groups) || a.name_en.localeCompare(b.name_en)
   )
-
+  
   const grouped: Record<string, TeamInfo[]> = {}
   for (const team of teams) {
     if (!grouped[team.groups]) grouped[team.groups] = []

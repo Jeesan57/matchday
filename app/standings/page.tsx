@@ -68,14 +68,24 @@ const COLS = '18px minmax(0,1fr) 30px 30px 30px 30px 30px 30px 34px 38px 96px'
 const TEAM_HEADER_INDENT = 'pl-[28px]'
 
 export default async function StandingsPage() {
-  const [groupsRes, teamsRes, gamesRes] = await Promise.all([
-    fetch('https://worldcup26.ir/get/groups', { next: { revalidate: 300 } }),
-    fetch('https://worldcup26.ir/get/teams', { next: { revalidate: 300 } }),
-    fetch('https://worldcup26.ir/get/games', { next: { revalidate: 300 } }),
-  ])
+  let groupsData: GroupsResponse = {}
+  let teamsData: TeamsResponse = {}
+  let gamesData: GamesResponse = {}
 
-  const [groupsData, teamsData, gamesData]: [GroupsResponse, TeamsResponse, GamesResponse] =
-    await Promise.all([groupsRes.json(), teamsRes.json(), gamesRes.json()])
+  try {
+    const [groupsRes, teamsRes, gamesRes] = await Promise.all([
+      fetch('https://worldcup26.ir/get/groups', { next: { revalidate: 300 } }),
+      fetch('https://worldcup26.ir/get/teams', { next: { revalidate: 300 } }),
+      fetch('https://worldcup26.ir/get/games', { next: { revalidate: 300 } }),
+    ])
+      ;[groupsData, teamsData, gamesData] = await Promise.all([
+        groupsRes.json(),
+        teamsRes.json(),
+        gamesRes.json(),
+      ])
+  } catch {
+    // API unreachable during build - will load on first request
+  }
 
   const teamMap: Record<string, TeamInfo> = {}
   for (const team of teamsData.teams ?? []) {
@@ -84,6 +94,7 @@ export default async function StandingsPage() {
 
   const games = gamesData.games ?? []
   const groups = (groupsData.groups ?? []).sort((a, b) => a.name.localeCompare(b.name))
+
 
   return (
     <div className="pb-16">
