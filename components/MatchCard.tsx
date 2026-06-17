@@ -174,7 +174,7 @@ export default function MatchCard({ match }: { match: Match }) {
 
             {match.venue ? (
               <p className="text-[10px] text-white/20 tracking-wide truncate text-center">
-                {match.venue} pp
+                {match.venue}
               </p>
             ) : (
               <div />
