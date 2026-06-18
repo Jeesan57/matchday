@@ -64,10 +64,13 @@ export default function MatchDetail({
           filter: `id=eq.${initialMatch.id}`,
         },
         (payload) => {
+          console.log('[realtime] payload received:', payload)  // ← add
           setMatch(payload.new as Match)
         }
       )
-      .subscribe()
+      .subscribe((status, err) => {
+        console.log('[realtime] status:', status, err)  // ← add
+      })
 
     return () => {
       supabase.removeChannel(channel)

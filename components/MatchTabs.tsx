@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import MatchCard from '@/components/MatchCard'
+
+const supabase = createClient()
 
 type Match = {
   id: number
@@ -69,13 +72,71 @@ type Props = {
 }
 
 export default function MatchTabs({
-  liveMatches,
-  todayMatches,
-  recentMatches,
-  upcomingMatches,
+  liveMatches: initialLive,
+  todayMatches: initialToday,
+  recentMatches: initialRecent,
+  upcomingMatches: initialUpcoming,
 }: Props) {
-  const defaultTab: Tab = liveMatches.length > 0 ? 'live' : 'today'
-  const [active, setActive] = useState<Tab>(defaultTab)
+  const [liveMatches, setLiveMatches] = useState(initialLive)
+  const [todayMatches, setTodayMatches] = useState(initialToday)
+  const [recentMatches, setRecentMatches] = useState(initialRecent)
+  const [upcomingMatches, setUpcomingMatches] = useState(initialUpcoming)
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('all-matches')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'matches' },
+        (payload) => {
+          const updated = payload.new as Match
+
+          const patch = (list: Match[]) =>
+            list.map((m) => (m.id === updated.id ? { ...m, ...updated } : m))
+
+          setLiveMatches((prev) => {
+            const alreadyIn = prev.some((m) => m.id === updated.id)
+            if (updated.status === 'live' && !alreadyIn) {
+              return [...patch(prev), updated]
+            }
+            if (updated.status !== 'live' && alreadyIn) {
+              return patch(prev).filter((m) => m.id !== updated.id)
+            }
+            return patch(prev)
+          })
+
+          setTodayMatches(patch)
+
+          setRecentMatches((prev) => {
+            const alreadyIn = prev.some((m) => m.id === updated.id)
+            if (updated.status === 'finished' && !alreadyIn) {
+              return [updated, ...prev]
+            }
+            return patch(prev)
+          })
+
+          setUpcomingMatches(patch)
+        }
+      )
+      .subscribe((status) => {
+        console.log('[realtime] MatchTabs:', status)
+      })
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  // const defaultTab: Tab = liveMatches.length > 0 ? 'live' : 'today'
+  const [active, setActive] = useState<Tab>(initialLive.length > 0 ? 'live' : 'today')
+
+  useEffect(() => {
+    if (liveMatches.length > 0) {
+      setActive('live')
+    } else {
+      setActive('today')
+    }
+  }, [liveMatches.length])
 
   const tabs: { id: Tab; label: string; count?: number; live?: boolean }[] = [
     ...(liveMatches.length > 0
